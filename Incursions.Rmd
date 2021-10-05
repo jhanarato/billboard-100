@@ -1,0 +1,27 @@
+---
+title: "Billboard 100 - Incursions"
+output: html_notebook
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+```
+
+I was showing Laura Navaro's ["Evolution of genres"](https://github.com/lau-cloud/TidyTuesdaycode/tree/master/Billboard) to my muso friend and we got talking about what songs and bands might have made the incursions we see in the graphic:
+
+* Alt Rock
+* Alt Metal
+* Alt Hip-Hop
+
+This project is an exploration of these genres.
+
+## Import the data
+
+The CSV files are quite large so I downloaded them rather than pulling them down each time I import. They're available on the [TidyTuesday repo](https://github.com/rfordatascience/tidytuesday/tree/master/data/2021/2021-09-14). 
+
+### Billboard charts and Spotify audio features.
+```{r}
+billboard <- readr::read_csv("billboard.csv")
+audio_features <- readr::read_csv("audio_features.csv")
+```
+
