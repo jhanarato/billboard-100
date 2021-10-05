@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # CSV files are large & available from Tidy Tuesday repo.
 *.csv
+
+# Generated HTML
+*.nb.html
