@@ -5,6 +5,7 @@ output: html_notebook
 
 ```{r setup, include = FALSE}
 library(tidyverse)
+library(jsonlite)
 ```
 
 I was showing Laura Navaro's ["Evolution of genres"](https://github.com/lau-cloud/TidyTuesdaycode/tree/master/Billboard) to my muso friend and we got talking about what songs and bands might have made the incursions we see in the graphic:
@@ -20,8 +21,44 @@ This project is an exploration of these genres.
 The CSV files are quite large so I downloaded them rather than pulling them down each time I import. They're available on the [TidyTuesday repo](https://github.com/rfordatascience/tidytuesday/tree/master/data/2021/2021-09-14). 
 
 ### Billboard charts and Spotify audio features.
-```{r}
+```{r import}
 billboard <- readr::read_csv("billboard.csv")
 audio_features <- readr::read_csv("audio_features.csv")
+```
+
+## Tidy the data
+
+For the "audio features" we're only interested in the genres.
+
+```{r table-of-genres }
+knitr::kable(
+  audio_features %>% select(spotify_genre) %>% head(5)
+)
+```
+### Parsing the genre
+
+Each song may have zero or more genres and the genres are currently in what appears to be characters of JSON.
+```{r try-json }
+example <- "[‘adult standards’, ‘brill building pop’, ‘easy listening’, ‘mellow gold’]"
+
+fromJSON(example)
+```
+
+Nope, don't think so. In fact they don't look like normal quotation marks.
+
+```{r quote-types}
+"‘" == "'"
+"‘" == "’"
+"‘" == "‘"
+```
+OK, so there are two kinds of quotes, not what you'd usually type.
+```{r parse-genres-function }
+parse_genres <- function(genres) {
+  str_extract_all(genres, "‘[a-z ]+’")
+}
+
+example <- "[‘adult standards’, ‘brill building pop’, ‘easy listening’, ‘mellow gold’]"
+
+parse_genres(example)
 ```
 
