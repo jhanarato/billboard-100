@@ -54,11 +54,13 @@ Nope, don't think so. In fact they don't look like normal quotation marks.
 OK, so there are two kinds of quotes, not what you'd usually type.
 ```{r parse-genres-function }
 parse_genres <- function(genres) {
-  str_extract_all(genres, "‘[a-z ]+’")
+  as_vector(str_extract_all(genres, "(?<=‘)[a-z ]+(?=’)"))
 }
 
 example <- "[‘adult standards’, ‘brill building pop’, ‘easy listening’, ‘mellow gold’]"
 
 parse_genres(example)
 ```
+
+
 
