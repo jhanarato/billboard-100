@@ -1,20 +1,13 @@
 ---
 title: "Billboard 100 - Incursions"
 output: html_notebook
+date: "2021-10-06"
 ---
 
 ```{r setup, include = FALSE}
 library(tidyverse)
 library(jsonlite)
 ```
-
-I was showing Laura Navaro's ["Evolution of genres"](https://github.com/lau-cloud/TidyTuesdaycode/tree/master/Billboard) to my muso friend and we got talking about what songs and bands might have made the incursions we see in the graphic:
-
-* Alt Rock
-* Alt Metal
-* Alt Hip-Hop
-
-This project is an exploration of these genres.
 
 ## Import the data
 

@@ -1,2 +1,9 @@
 # billboard-100
-My take on Tidy Tuesday Bilboard Top 100 data (2021, week 38)
+
+I was showing Laura Navaro's ["Evolution of genres"](https://github.com/lau-cloud/TidyTuesdaycode/tree/master/Billboard) to a friend as an example of the fun we can have with R. There were a few genres that entered the charts briefly that we thought were interesting:
+
+* Alt Rock
+* Alt Metal
+* Alt Hip-Hop
+
+This project is an investigation into the comings and goings of these genres.
