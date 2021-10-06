@@ -6,7 +6,6 @@ date: "2021-10-06"
 
 ```{r setup, include = FALSE}
 library(tidyverse)
-library(jsonlite)
 ```
 
 ## Import the data
@@ -28,32 +27,21 @@ knitr::kable(
   audio_features %>% select(spotify_genre) %>% head(5)
 )
 ```
-### Parsing the genre
 
-Each song may have zero or more genres and the genres are currently in what appears to be characters of JSON.
-```{r try-json }
-example <- "[‘adult standards’, ‘brill building pop’, ‘easy listening’, ‘mellow gold’]"
+A table with a row for each song / genre combo. Songs with no genres do not have an entry.
 
-fromJSON(example)
+```{r song_genre-table }
+songs_genres <- audio_features %>%
+  select(song_id, spotify_genre) %>%
+  mutate(
+    genre = str_extract_all(spotify_genre, "(?<=')[a-z ]+(?=')")
+  ) %>%
+  select(-spotify_genre) %>%
+  unnest(genre)
 ```
 
-Nope, don't think so. In fact they don't look like normal quotation marks.
-
-```{r quote-types}
-"‘" == "'"
-"‘" == "’"
-"‘" == "‘"
+```{r new-join-table }
+knitr::kable(
+  songs_genres %>% head(20)
+)
 ```
-OK, so there are two kinds of quotes, not what you'd usually type.
-```{r parse-genres-function }
-parse_genres <- function(genres) {
-  as_vector(str_extract_all(genres, "(?<=‘)[a-z ]+(?=’)"))
-}
-
-example <- "[‘adult standards’, ‘brill building pop’, ‘easy listening’, ‘mellow gold’]"
-
-parse_genres(example)
-```
-
-
-
