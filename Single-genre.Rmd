@@ -1,0 +1,122 @@
+---
+title: "Billboard 100 - Analyse Script.R"
+output: html_notebook
+date: "2021-10-07"
+author: "Ajahn J.R. & Scotty"
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+
+billboard <- readr::read_csv("billboard.csv")
+audio_features <- readr::read_csv("audio_features.csv")
+```
+
+To get back to the question that inspired this project:
+
+**The original graphic shows some genres entering the charts for a short space of time, while previously being obscure. What do these periods of popularity indicate?**
+
+# Wrangling
+
+Although each song may have several genres, the original infographic only used the first genre in the list.
+```{r first-genre}
+song_genre <- audio_features %>%
+  mutate(
+    first_genre = str_extract(spotify_genre, "(?<=')[a-z ]+(?=')")
+  ) %>%
+  select(song_id, first_genre)
+```
+
+We can now add the genre to the billboard data.
+```{r join-genre }
+billboard_genre <- billboard %>%
+  left_join(song_genre, by = "song_id")
+```
+
+# Original Statistics
+
+Now we need to recreate the statistics presented in the *Evolution of genres*. This is described like so:
+
+> Most common genre of songs that appeared in the Billboard Hot 100 each week from 1958 to 2021.
+
+The x-axis is years and the y-axis percentage. How did the author get those figures?
+
+* Join the tables.
+* Convert `week_id` to a date and get the year component.
+* Get the first genre (`test.1`) and select with year.
+
+Giving us something like this:
+
+year | test.1
+-----|-------
+1965 | deep adult standards
+1997 | classic soul
+
+```{r year-data }
+year_genre <- billboard_genre %>%
+  mutate(year = year(mdy(week_id))) %>%
+  select(year, first_genre)
+```
+
+
+## Genre popularity
+
+For each year, count how many times a genre appears.
+
+```{r count-as-original }
+count_stat <- year_genre %>% 
+  count(year, first_genre) %>% 
+  rename(total = "n")
+```
+
+For each year keep only the top three genres. There may be less than three, particularly for early years.
+
+```{r top-three }
+top_three_per_year <- count_stat %>%                                      
+  arrange(desc(total)) %>% 
+  group_by(year) %>%
+  slice(1:3)
+```
+
+Remove any genre that's `NA` or empty. Might be worth doing this before selecting top 3?
+
+```{r}
+missing_removed <- top_three_per_year %>% filter(!is.na(first_genre) | first_genre == "")
+```
+
+Now what does this do?
+```{r eval = FALSE }
+#improve gaps
+g_by_year2 <- setkey(setDT(g_by_year2), year, test.1)[CJ(year=unique(year), test.1=unique(test.1))
+][is.na(data), data:=0L]
+
+g_by_year2[is.na(g_by_year2)] <- 0 # Replace NA with 0.
+```
+
+I've saved the data at that point in `after_improve_gaps.csv`:
+```{r import-improved }
+improved <- read_csv("after_improve_gaps.csv")
+```
+
+I'm guessing this only relates to the layout of the plot, but I could be wrong. 
+
+The data column can be ignored as it is always 0.
+```{r data-always-zero }
+improved %>% filter(data != 0)
+```
+There are only 16 genres in the data passed to the final plot:
+```{r distinct-genres }
+improved %>% select(test.1) %>% distinct(test.1)
+```
+
+So for each year we end up with 16 genres.
+
+```{r improved-1958}
+improved %>% filter(year == 1958)
+```
+
+So for this table, do we have any years where the total has more than one row that is not zero? I'd guess there could be up to 3. This has two!
+
+```{r improved-1965 }
+improved %>% filter(year == 1965)
+```
