@@ -39,7 +39,8 @@ vignettes/*.pdf
 .Renviron
 
 # CSV files are large & available from Tidy Tuesday repo.
-*.csv
+billboard.csv
+audio_features.csv
 
 # Generated HTML
 *.nb.html
