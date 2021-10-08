@@ -1,0 +1,42 @@
+---
+title: "genres variable"
+output: html_notebook
+date: "2021-10-08"
+---
+
+In "songs variable" I worked through the steps to create `songs`, a variable in the original code. The next step is the `genres` variable.
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(lubridate)
+
+billboard <- readr::read_csv("billboard.csv")
+audio_features <- readr::read_csv("audio_features.csv")
+```
+
+I created a "checkpoint" in the original code to save the `songs` and  `genres` variables:
+
+```{r variable-checkpoints }
+songs_rds  <- read_rds("songs.rds")
+genres_rds <- read_rds("genres.rds")
+```
+
+Here is the original code, modified to take the songs_rds and produce the genres_rds:
+
+```{r original-code }
+genres.1 <- transform(songs_rds, test=do.call(rbind, strsplit(spotify_genre, ',', fixed=TRUE)), stringsAsFactors=F)
+
+genres.1 <- genres.1 %>% 
+  select(year, test.1)
+
+genres.1$test.1 <- gsub("","",as.character(genres.1$test.1))
+genres.1$test.1 <- gsub("'","",as.character(genres.1$test.1))
+genres.1$test.1 <- gsub('"',"",as.character(genres.1$test.1))
+
+
+genres.1$test.1 <- substr(genres.1$test.1, 2, nchar(genres.1$test.1)-1)
+
+all_equal(genres.1, genres_rds)
+```
+
+We can write our own version of this code if we like. Next up the `g_by_year` and `g_by_year2` variables.
