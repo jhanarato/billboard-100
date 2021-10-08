@@ -1,0 +1,93 @@
+---
+title: "songs variable"
+output: html_notebook
+date: "2021-10-08"
+---
+
+There are three main variables created as the data for the plot:
+
+* `songs`
+* `genres`
+* `g_by_year2`
+
+In this notebook I hope to understand the first.
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(lubridate)
+
+billboard <- readr::read_csv("billboard.csv")
+audio_features <- readr::read_csv("audio_features.csv")
+```
+
+The original code:
+```{r old.songs.variable }
+songs.1 <- left_join(billboard, 
+                     audio_features, 
+                     by = c('song_id', 'song', 'performer')) %>%
+  mutate(date = mdy(week_id)) %>% 
+  mutate(year = year(date))
+
+songs.1 <- songs.1 %>% 
+  select(year, spotify_genre)
+```
+
+The above code produces the same output as the rds file so we can use the latter as the basis of the next investigation - the `genres` variable.
+```{r compare-to-rds}
+songs_rds <- read_rds("songs.rds")
+all_equal(songs.1, songs_rds)
+```
+
+
+My new code for producing the data above, plus the first genre extracted from the `spotify_genre` column.
+```{r new.songs.variable}
+song_genre <- audio_features %>%
+  mutate(
+    first_genre = str_extract(spotify_genre, "(?<=')[a-z ]+(?=')")
+  ) %>%
+  select(song_id, spotify_genre, first_genre)
+
+billboard_genre <- billboard %>%
+  left_join(song_genre, by = "song_id")
+
+songs.2 <- billboard_genre %>%
+  mutate(year = year(mdy(week_id))) %>%
+  select(year, spotify_genre)
+
+all_equal(songs.2, songs_rds)
+```
+
+Which brings us to the problem to solve - there are rows in my code that aren't in the original. Why is that? Is this why the `count()` in the next step gives us different results?
+
+An `anti_join()` shows the rows produced by my code that aren't in the original. 
+```{r find-missing-rows}
+songs.2 %>% anti_join(songs.1, by = "spotify_genre")
+```
+
+Now we need to find the original rows, since we've selected away a lot of information.
+```{r missing-with-all-columns }
+songs.3 <- billboard_genre %>%
+  mutate(year = year(mdy(week_id)))
+
+songs.3 %>% anti_join(songs.1, by = "spotify_genre")
+```
+
+The original join had two more fields, let's add those to the new code:
+```{r do-same-join }
+song_genre <- audio_features %>%
+  mutate(
+    first_genre = str_extract(spotify_genre, "(?<=')[a-z ]+(?=')")
+  ) %>%
+  select(song_id, song, performer, spotify_genre, first_genre)
+
+billboard_genre <- billboard %>%
+  left_join(song_genre, by = c('song_id', 'song', 'performer'))
+
+songs.2 <- billboard_genre %>%
+  mutate(year = year(mdy(week_id))) %>%
+  select(year, spotify_genre)
+
+all_equal(songs.2, songs_rds)
+```
+
+OK, that's the answer! I tried to make my join a bit more succinct but lost a few rows along the way.
