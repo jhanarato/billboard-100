@@ -1,6 +1,7 @@
 ---
 title: "16 Genres"
 output: html_notebook
+date: "2021-10-08"
 ---
 
 The original plot used a data set with 16 genres. Starting afresh I'll derive the list.
@@ -15,7 +16,8 @@ audio_features <- readr::read_csv("audio_features.csv")
 
 This is the data used by the plot, just before the section of code labeled "impove gaps" which I gather is used for presentation purposes.
 ```{r original-plot-data }
-original_data <- read_csv("lau_g_by_year2.csv")
+original_data <- read_csv("lau_g_by_year2.csv") %>%
+  arrange(year, test.1)
 ```
 
 All the genres used. The last letter for each genre is missing:
@@ -51,7 +53,8 @@ original_tidy <- billboard_genre %>%
   arrange(desc(total)) %>% 
   group_by(year) %>%
   slice(1:3)%>% 
-  filter(!is.na(first_genre) | first_genre == "")
+  filter(!is.na(first_genre) | first_genre == "") %>%
+  arrange(year, first_genre)
 ```
 
 I seem to have missed something here. Work through step by step and compare.
@@ -110,5 +113,45 @@ g_by_year2_2 <- g_by_year_2 %>%
 g_by_year2_2 <- g_by_year2_2[!(is.na(g_by_year2_2$test.1) | g_by_year2_2$test.1==""), ]
 
 all_equal(g_by_year2, g_by_year2_2)
+```
+
+My own code to create the data at "checkpoint 1". In the original code this is the final value of the variable `songs`. We've already recreated the code and can use the variable `songs_2` to compare.
+```{r make-it-to-checkpoint-1 }
+checkpoint_1_songs <- checkpoint_1_songs %>% 
+  mutate(year = as.integer(year))
+
+stopifnot(all_equal(checkpoint_1_songs, songs_2))
+
+data.1 <- left_join(billboard, 
+                     audio_features, 
+                     by = c('song_id', 'song', 'performer')) %>%
+  mutate(date = mdy(week_id)) %>% 
+  mutate(year = year(date))%>% 
+  select(year, spotify_genre)
+
+stopifnot(all_equal(data.1, checkpoint_1_songs))
+```
+
+```{r make-it-to-checkpoint-2 }
+checkpoint_2_genres <- read_csv("lau_genres.csv") %>% 
+  mutate(year = as.integer(year))
+
+checkpoint_2_genres %>% filter(is.na(test.1)) # 37793 rows
+checkpoint_2_genres %>% filter(test.1 == "")  # 0 rows
+
+genres_2 %>% filter(is.na(test.1)) # 14761 rows
+genres_2 %>% filter(test.1 == "")  # 23032 rows
+
+```
+
+```{r}
+all_equal(genres, genres_2)
+```
+
+Differnces between origonal and new
+```{r}
+original_data
+original_tidy %>% ungroup()
+anti_join(original_data, original_tidy, by = "year")
 ```
 
