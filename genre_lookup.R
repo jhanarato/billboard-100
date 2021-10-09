@@ -31,10 +31,11 @@ old_genres <- function(songs_var) {
 new_genres <- function(songs_var) {
   songs_var %>%
     mutate(
-      first_genre = str_extract(spotify_genre, "(?<=')[a-z ]+(?=')")
+      is_childrens = str_detect(spotify_genre, "\\[\"children's music\""),
+      is_aus_childrens = str_detect(spotify_genre, "\\[\"australian children's music\""),
+      first_genre = str_extract(spotify_genre, "(?<=')[-a-z0-9 &]+(?=')")
     )
 }
-
 
 # Combine old and new genres to compare
 make_genre_lookup <- function() {
@@ -61,9 +62,19 @@ lookup <- lookup %>%
   mutate(
     na_vs_empty  = is.na(first_genre) & test.1 == "",
     na_vs_exists = is.na(first_genre) & !is.na(test.1) & test.1 != "",
-    both_na = is.na(first_genre) & is.na(test.1)
+    both_na = is.na(first_genre) & is.na(test.1),
+    row_id = row_number()
   )
 
-lookup %>% filter(na_vs_empty)
+lookup %>% filter(both_na) # This is not a problem.
+
+# Odd quoted genres now flagged and a number of extra characters matched
+# within the genre name.
 lookup %>% filter(na_vs_exists)
-lookup %>% filter(both_na)
+
+# Perhaps some genres are empty strings?
+lookup %>% filter(na_vs_empty)
+
+audio_features %>%
+  filter(spotify_genre == "")
+
