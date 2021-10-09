@@ -9,6 +9,7 @@ In "songs variable" I worked through the steps to create `songs`, a variable in 
 ```{r setup, include = FALSE}
 library(tidyverse)
 library(lubridate)
+library(jsonlite)
 
 billboard <- readr::read_csv("billboard.csv")
 audio_features <- readr::read_csv("audio_features.csv")
@@ -63,7 +64,7 @@ lau_genres(songs_rds)
 
 This does the same thing, without losing trailing characters.
 
-```{r}
+```{r my-genre-mutate-function }
 jr_genres <- function(songs_var) {
   songs_var %>%
     mutate(
@@ -76,8 +77,48 @@ jr_genres(songs_rds)
 
 A lookup table of the two genre columns would be good too.
 
-```{r}
-genre_lookup <- tibble(jr_genres(songs_rds)$first_genre,
-                       lau_genres(songs_rds)$test.1)
+```{r lookup-table }
+genre_lookup <- tibble(first_genre = jr_genres(songs_rds)$first_genre,
+                       test.1 =lau_genres(songs_rds)$test.1)
+
+genre_lookup <- genre_lookup %>% distinct()
 ```
 
+After a bit of examination (see `genre_lookup.R`) it turns out that there are genres with dashes: 
+```{r double-quote-genre }
+audio_features %>%
+  filter(str_detect(spotify_genre, "-")) %>%
+  select(spotify_genre)
+```
+
+There are also two genres with a single quote enclosed by double quotes:
+```{r}
+audio_features %>%
+  filter(str_detect(spotify_genre, "\"")) %>%
+  select(spotify_genre)
+```
+
+
+Try JSON again?
+```{r json-parse}
+json_genres <- function(songs_var) {
+  songs_var %>%
+    mutate(
+      json_genre = fromJSON(spotify_genre)
+    )
+}
+
+json_result <- json_genres(songs_rds)
+```
+
+Nope, using single quotes is not allowed.
+
+Try again, taking into account the two special cases.
+```{r my-genre-mutate-function-version-two }
+jr_genres_2 <- function(songs_var) {
+  songs_var %>%
+    mutate(
+      first_genre = str_extract(spotify_genre, "(?<=')[-a-z ]+(?=')")
+    )
+}
+```
