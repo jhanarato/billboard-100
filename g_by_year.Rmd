@@ -1,0 +1,79 @@
+---
+title: "g_by_year variable"
+output: html_notebook
+date: "2021-10-09"
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(lubridate)
+
+billboard <- readr::read_csv("billboard.csv")
+audio_features <- readr::read_csv("audio_features.csv")
+```
+
+Looking at a short piece of code that comes after the `genres` variable
+```{r checkpoints }
+genres_rds <- read_rds("genres.rds")
+g_by_year_rds <- read_rds("g_by_year.rds")
+```
+
+The code from the author's script:
+```{r original-code }
+g_by_year <- genres_rds %>% 
+  count(year, test.1) %>% 
+  rename(total = "n")
+
+all_equal(g_by_year, g_by_year_rds)
+```
+
+My version, starting from scratch rather than using the checkpoint data:
+```{r my-code }
+song_and_genre <- audio_features %>%
+  mutate(
+    first_genre = str_extract(spotify_genre, "(?<=')[a-z ]+(?=')")
+  ) %>%
+  select(song_id, song, performer, spotify_genre, first_genre)
+
+data.1 <- billboard %>%
+  left_join(song_and_genre, by = c('song_id', 'song', 'performer')) %>%
+  mutate(year = year(mdy(week_id))) %>%
+  select(year, first_genre) %>%
+  count(year, first_genre) %>% 
+  rename(total = "n") %>% 
+  left_join(genre_lookup)
+```
+
+There are still some differences. Use `genre_lookup` to aid comparison.
+
+```{r join-with-lookup }
+data.1 <- data.1 %>% left_join(genre_lookup)
+
+data.1 %>% anti_join(genres_rds, by = "test.1")
+```
+
+I now have a new script that combines the two ways of getting the first genre.
+```{r lookup-function }
+lookup <- make_genre_lookup()
+```
+
+Examine missing data:
+```{r look-at-lookup }
+old_na <- lookup %>% filter(is.na(test.1))
+old_empty <- lookup %>% filter(test.1 == "")
+new_na <- lookup %>% filter(is.na(first_genre))
+new_empty <- lookup %>% filter(first_genre == "")
+```
+
+Most interesting:
+```{r empty-1 }
+lookup %>% filter(!is.na(test.1), is.na(first_genre))
+```
+
+So where test.1 is an empty string, first_genre is `NA`.
+
+```{r na-and-not-empty }
+lookup %>% filter(!is.na(test.1), is.na(first_genre), test.1 != "")
+```
+
+There are over 1000 rows where where `test.1` has a genre but `first_genre` doesn't. 

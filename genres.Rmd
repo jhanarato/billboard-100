@@ -113,7 +113,7 @@ json_result <- json_genres(songs_rds)
 
 Nope, using single quotes is not allowed.
 
-Try again, taking into account the two special cases.
+Take care of the dash:
 ```{r my-genre-mutate-function-version-two }
 jr_genres_2 <- function(songs_var) {
   songs_var %>%
@@ -122,3 +122,21 @@ jr_genres_2 <- function(songs_var) {
     )
 }
 ```
+
+Take care of the double quoted genres:
+```{r double-quote-genres }
+double_quote_genres <- function(songs_var) {
+  songs_var %>%
+    mutate(
+      first_genre = str_extract(spotify_genre, "(?<=')[-a-z ]+(?=')"),
+      first_genre = if_else(str_detect(spotify_genre, "$\\[\"children's music\""), 
+                            "children's music", first_genre),
+      first_genre = if_else(str_detect(spotify_genre, "$\\[\"australian children's music\""), 
+                            "australian children's music", first_genre)
+    )
+}
+
+fixed_genres <- double_quote_genres(songs_rds)
+```
+
+
