@@ -40,3 +40,44 @@ all_equal(genres.1, genres_rds)
 ```
 
 We can write our own version of this code if we like. Next up the `g_by_year` and `g_by_year2` variables.
+
+```{r make-lau-genres-function }
+lau_genres <- function(songs_var) {
+    genres <- transform(songs_var, test=do.call(rbind, strsplit(spotify_genre, ',', fixed=TRUE)), stringsAsFactors=F)
+  
+  genres <- genres %>% 
+    select(year, test.1)
+  
+  genres$test.1 <- gsub("","",as.character(genres$test.1))
+  genres$test.1 <- gsub("'","",as.character(genres$test.1))
+  genres$test.1 <- gsub('"',"",as.character(genres$test.1))
+  
+  
+  genres$test.1 <- substr(genres$test.1, 2, nchar(genres$test.1)-1)
+  
+  return(genres)
+}
+
+lau_genres(songs_rds)
+```
+
+This does the same thing, without losing trailing characters.
+
+```{r}
+jr_genres <- function(songs_var) {
+  songs_var %>%
+    mutate(
+      first_genre = str_extract(spotify_genre, "(?<=')[a-z ]+(?=')")
+    )
+}
+
+jr_genres(songs_rds)
+```
+
+A lookup table of the two genre columns would be good too.
+
+```{r}
+genre_lookup <- tibble(jr_genres(songs_rds)$first_genre,
+                       lau_genres(songs_rds)$test.1)
+```
+
