@@ -27,14 +27,30 @@ old_genres <- function(songs_var) {
   return(genres)
 }
 
-# Create the genres using the new code
-new_genres <- function(songs_var) {
-  songs_var %>%
+fix_quotes <- function(data) {
+  data %>%
     mutate(
-      is_childrens = str_detect(spotify_genre, "\\[\"children's music\""),
-      is_aus_childrens = str_detect(spotify_genre, "\\[\"australian children's music\""),
+      spotify_genre = str_replace(spotify_genre, 
+                                  "\"children's music\"",
+                                  "'childrens music'"),
+      spotify_genre = str_replace(spotify_genre, 
+                                  "\"australian children's music\"",
+                                  "'australian childrens music'")
+    )
+}
+
+extract_first_genre <- function(data) {
+  data %>%
+    mutate(
       first_genre = str_extract(spotify_genre, "(?<=')[-a-z0-9 &]+(?=')")
     )
+}
+
+# Create the genres using the new code
+new_genres <- function(data) {
+  data %>%
+    fix_quotes() %>%
+    extract_first_genre()
 }
 
 # Combine old and new genres to compare
@@ -49,32 +65,5 @@ make_genre_lookup <- function() {
 
 lookup <- make_genre_lookup()
 
-# Debug!
-
-lookup %>% filter(!is.na(test.1), is.na(first_genre))
-
-# Some issues here:
-#   test.1 has empty strings & NAs but first_genre has only NAs.
-#   test.1 has genres where first_genre doesn't. eg/ "childrens music"
-
-# Create variables to mark these issues.
-lookup <- lookup %>% 
-  mutate(
-    na_vs_empty  = is.na(first_genre) & test.1 == "",
-    na_vs_exists = is.na(first_genre) & !is.na(test.1) & test.1 != "",
-    both_na = is.na(first_genre) & is.na(test.1),
-    row_id = row_number()
-  )
-
-lookup %>% filter(both_na) # This is not a problem.
-
-# Odd quoted genres now flagged and a number of extra characters matched
-# within the genre name.
-lookup %>% filter(na_vs_exists)
-
-# Perhaps some genres are empty strings?
-lookup %>% filter(na_vs_empty)
-
-audio_features %>%
-  filter(spotify_genre == "")
-
+lookup %>% 
+  filter(is.na(first_genre) & test.1 == "")
