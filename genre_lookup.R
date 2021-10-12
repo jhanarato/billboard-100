@@ -65,5 +65,3 @@ make_genre_lookup <- function() {
 
 lookup <- make_genre_lookup()
 
-lookup %>% 
-  filter(is.na(first_genre) & test.1 == "")

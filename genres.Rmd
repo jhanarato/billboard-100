@@ -47,7 +47,7 @@ lau_genres <- function(songs_var) {
     genres <- transform(songs_var, test=do.call(rbind, strsplit(spotify_genre, ',', fixed=TRUE)), stringsAsFactors=F)
   
   genres <- genres %>% 
-    select(year, spotify_genre, test.1)
+    select(year, test.1)
   
   genres$test.1 <- gsub("","",as.character(genres$test.1))
   genres$test.1 <- gsub("'","",as.character(genres$test.1))
@@ -111,5 +111,32 @@ json_genres <- function(songs_var) {
 json_result <- json_genres(songs_rds)
 ```
 
+Why empty genres?
+```{r compare-empty }
+lau_genres <- function(songs_var) {
+    genres <- transform(songs_var, test=do.call(rbind, strsplit(spotify_genre, ',', fixed=TRUE)), stringsAsFactors=F)
+  
+  genres <- genres %>% 
+    select(spotify_genre, test.1) # Just modified this line to compare.
+  
+  genres$test.1 <- gsub("","",as.character(genres$test.1))
+  genres$test.1 <- gsub("'","",as.character(genres$test.1))
+  genres$test.1 <- gsub('"',"",as.character(genres$test.1))
+  
+  
+  genres$test.1 <- substr(genres$test.1, 2, nchar(genres$test.1)-1)
+  
+  return(genres)
+}
 
+compare_empty <- 
+  lau_genres(songs_rds) %>%
+  filter(test.1 == "")
 
+compare_na <- 
+  lau_genres(songs_rds) %>%
+  filter(is.na(test.1))
+```
+Great! 
+Empty strings in `test.1` correspond to a `spotify_genre` of `[]`. 
+`NA`s appear where `spotify_genre` is `NA`.
