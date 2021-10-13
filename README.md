@@ -8,4 +8,4 @@ I was showing Laura Navaro's ["Evolution of genres"](https://github.com/lau-clou
 
 This project is an investigation into the comings and goings of these genres.
 
-The file `Genre-Report.Rmd` contains a very rough report on the corresponding songs of the genres above. 
+The file `Genre-Report.Rmd` contains a very rough report on the corresponding songs of the genres above. The `Working` directory contains my investigations and won't run but is there for posterity.
