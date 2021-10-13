@@ -7,3 +7,5 @@ I was showing Laura Navaro's ["Evolution of genres"](https://github.com/lau-clou
 * Alt Hip-Hop
 
 This project is an investigation into the comings and goings of these genres.
+
+The file `Genre-Report.Rmd` contains a very rough report on the corresponding songs of the genres above. 

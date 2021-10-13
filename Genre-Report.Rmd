@@ -1,0 +1,195 @@
+---
+title: "Entry of Genres to Billboard"
+output: html_notebook
+date: "2021-10-13"
+---
+
+```{r global_options, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning = FALSE, 
+                      messages = FALSE, 
+                      include = TRUE,
+                      results = "hide")
+```
+
+```{r setup, include = FALSE }
+library(tidyverse)
+library(lubridate)
+```
+
+## Data Processing Steps
+
+Import the Billboard & Spotify data
+```{r import-data }
+billboard <- readr::read_csv("billboard.csv")
+spotify <- readr::read_csv("audio_features.csv")
+```
+
+Add year column to Billboard 
+```{r add-year }
+billboard <- billboard %>%
+  mutate(
+    year = year(mdy(week_id))
+  )
+```
+
+Retrieve songs by genre
+```{r songs_of_genre }
+songs_of_genre <- function(genre) {
+  genre <- str_c("'", genre, "'")
+  
+  spotify %>%
+    filter(str_detect(spotify_genre, genre))
+}
+```
+
+Merge billboard & spotify songs
+```{r merge_songs }
+billboard_with_genre <- function(genre) {
+  billboard %>% 
+    semi_join(
+      songs_of_genre(genre), by = c('song_id', 'song', 'performer')
+    )
+}
+```
+
+Collect the data for the three genres. Note misspelling of "atl hip hop". That's what was used in the original plot.
+```{r all-alternative-rock }
+alt_rock    <- billboard_with_genre("alternative rock")
+alt_metal   <- billboard_with_genre("alternative metal")
+alt_hip_hop <- billboard_with_genre("atl hip hop") # Misspelling in data.
+```
+
+Find the best years for genres.
+```{r top-years }
+top_years <- function(data, n) {
+  data %>% count(year, sort = TRUE) %>% head(n)
+}
+```
+
+```{r genre-songs-by-year }
+songs_by_year <- function(year_on_charts, bill_data) {
+  bill_data %>%
+    filter(year == year_on_charts) %>%
+    group_by(song, performer, song_id) %>%
+    summarise(
+      entries = n()
+    ) %>%
+    arrange(desc(entries)) %>%
+    select(-song_id)
+}
+```
+
+## Alt Rock on the Charts
+
+```{r alt-rock-popularity-plot}
+ggplot(alt_rock) +
+  geom_freqpoly(aes(year), binwidth = 1) +
+  labs(title = "Alt Rock popularity over time",
+       x = "Year", y = "Number of Entries") +
+  ggrepel::geom_label_repel(aes(x = year, y = n, label = year), 
+             data = top_years(alt_rock, 3))
+```
+
+### Alt Rock in 1994
+
+```{r alt-rock-popular-songs-1994 }
+knitr::kable(
+  songs_by_year(1994, alt_rock), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
+
+### Alt Rock in 1996
+
+```{r alt-rock-popular-songs-1996 }
+knitr::kable(
+  songs_by_year(1996, alt_rock), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
+
+### Alt Rock in 1999
+
+```{r alt-rock-popular-songs-1999 }
+knitr::kable(
+  songs_by_year(1999, alt_rock), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
+
+## Alt Metal on the Charts
+
+```{r alt-metal-popularity-plot}
+ggplot(alt_metal) +
+  geom_freqpoly(aes(year), binwidth = 1) +
+  labs(title = "Alt Metal popularity over time",
+       x = "Year", y = "Number of Entries") +
+  ggrepel::geom_label_repel(aes(x = year, y = n, label = year), 
+             data = top_years(alt_metal, 3))
+```
+
+### Alt Metal in 2002
+
+```{r alt-metal-popular-songs-2002 }
+knitr::kable(
+  songs_by_year(2002, alt_metal), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
+
+### Alt Metal in 2003
+
+```{r alt-metal-popular-songs-2003 }
+knitr::kable(
+  songs_by_year(2003, alt_metal), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
+
+### Alt Metal in 2004
+
+```{r alt-metal-popular-songs-2004 }
+knitr::kable(
+  songs_by_year(2004, alt_metal), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
+
+## Alt Hip-Hop on the Charts
+
+```{r alt-hip-hop-popularity-plot}
+ggplot(alt_hip_hop) +
+  geom_freqpoly(aes(year), binwidth = 1) +
+  labs(title = "Alt hip-hop popularity over time",
+       x = "Year", y = "Number of entries") +
+  ggrepel::geom_label_repel(aes(x = year, y = n, label = year), 
+             data = top_years(alt_hip_hop, 3))
+```
+
+### Alt Hip-Hop in 2004
+
+```{r alt-hip-hop-popular-songs-2004 }
+knitr::kable(
+  songs_by_year(2004, alt_hip_hop), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
+
+### Alt Hip-Hop in 2006
+
+```{r alt-hip-hop-popular-songs-2006 }
+knitr::kable(
+  songs_by_year(2006, alt_hip_hop), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
+
+### Alt Hip-Hop in 2017
+
+```{r alt-hip-hop-popular-songs-2017 }
+knitr::kable(
+  songs_by_year(2017, alt_hip_hop), 
+  col.names = c("Song", "Performer", "Entries")
+)
+```
