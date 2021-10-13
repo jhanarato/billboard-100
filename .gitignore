@@ -42,5 +42,6 @@ vignettes/*.pdf
 billboard.csv
 audio_features.csv
 
-# Generated HTML
-*.nb.html
+*.rds
+original-code.R
+*.png

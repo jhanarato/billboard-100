@@ -28,6 +28,7 @@ all_equal(g_by_year, g_by_year_rds)
 ```
 
 My version, starting from scratch rather than using the checkpoint data:
+
 ```{r my-code }
 song_and_genre <- audio_features %>%
   mutate(
@@ -40,32 +41,18 @@ data.1 <- billboard %>%
   mutate(year = year(mdy(week_id))) %>%
   select(year, first_genre) %>%
   count(year, first_genre) %>% 
-  rename(total = "n") %>% 
-  left_join(genre_lookup)
+  rename(total = "n") 
 ```
 
-There are still some differences. Use `genre_lookup` to aid comparison.
+Using `genre_lookup` we can see that my code includes all the genres in the author's code.
 
 ```{r join-with-lookup }
-data.1 <- data.1 %>% left_join(genre_lookup)
-
+genre_lookup <- make_genre_lookup()
+data.1 <- data.1 %>% left_join(genre_lookup, by = "first_genre")
 data.1 %>% anti_join(genres_rds, by = "test.1")
 ```
 
-I now have a new script that combines the two ways of getting the first genre.
-```{r lookup-function }
-lookup <- make_genre_lookup()
-```
-
-Examine missing data:
-```{r look-at-lookup }
-old_na <- lookup %>% filter(is.na(test.1))
-old_empty <- lookup %>% filter(test.1 == "")
-new_na <- lookup %>% filter(is.na(first_genre))
-new_empty <- lookup %>% filter(first_genre == "")
-```
-
-Most interesting:
+Sometimes `test.1` has an empty string where `first_genre` is NA. 
 ```{r empty-1 }
 lookup %>% filter(!is.na(test.1), is.na(first_genre))
 ```
@@ -76,4 +63,9 @@ So where test.1 is an empty string, first_genre is `NA`.
 lookup %>% filter(!is.na(test.1), is.na(first_genre), test.1 != "")
 ```
 
-There are over 1000 rows where where `test.1` has a genre but `first_genre` doesn't. 
+There were over 1000 rows where where `test.1` has a genre but `first_genre` doesn't. 
+
+But not any more! See `genre_lookup.R` where I've handled all the cases.
+
+Where `spotify_genre` is `[]` test.1 is `""` and first_genre is `NA`
+
