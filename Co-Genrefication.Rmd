@@ -1,0 +1,77 @@
+---
+title: "Co-Genrefication"
+output: html_notebook
+---
+
+Songs can have more than one genre - explore.
+
+```{r setup, include = FALSE }
+library(tidyverse)
+library(lubridate)
+```
+
+## Data Processing Steps
+
+Import the Billboard & Spotify data
+```{r import-data }
+billboard <- readr::read_csv("billboard.csv")
+spotify <- readr::read_csv("audio_features.csv")
+```
+
+```{r co-genre data }
+co_genres <- spotify %>%
+  mutate(
+    spotify_genre = str_replace(spotify_genre, 
+                                "\"children's music\"",
+                                "'childrens music'"),
+    spotify_genre = str_replace(spotify_genre, 
+                                "\"australian children's music\"",
+                                "'australian childrens music'")
+  ) %>%
+  select(song_id, song, performer, spotify_genre) %>%
+  mutate(
+    genre = str_extract_all(spotify_genre, "(?<=')[-a-z0-9 &]+(?=')")
+  ) %>%
+  select(-spotify_genre) %>%
+  unnest(genre)
+```
+
+```{r number of genres }
+number_of_genres <- co_genres %>% 
+  select(genre) %>% 
+  distinct() %>% 
+  count()
+```
+
+There are `r number_of_genres$n` genres.
+
+Pick a band... Eminem?
+
+```{r eminem-genres }
+co_genres %>% 
+  filter(performer == "Eminem") %>% 
+  select(genre) %>% 
+  distinct()
+```
+Nirvana?
+
+```{r eminem-genres }
+co_genres %>% 
+  filter(performer == "Nirvana") %>% 
+  select(genre) %>% 
+  distinct()
+```
+
+```{r teen-spirit }
+co_genres %>% 
+  filter(performer == "Nirvana") %>% 
+  select(song, genre) %>% 
+  distinct()
+```
+
+```{r filter }
+co_genres %>% filter(str_detect(performer, "Filter")) %>% 
+  select(song, genre) %>% 
+  distinct()
+```
+
