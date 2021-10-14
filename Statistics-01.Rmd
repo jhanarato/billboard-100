@@ -1,0 +1,70 @@
+---
+title: "Statistics Notes 01"
+author: "Ajahn J.R."
+date: "14/10/2021"
+output: pdf_document
+  
+---
+\large
+
+```{r setup, include = FALSE }
+library(tidyverse)
+library(lubridate)
+```
+
+## Data Processing Steps
+
+Import the Billboard & Spotify data
+```{r import-data, include = FALSE }
+billboard <- readr::read_csv("billboard.csv")
+spotify <- readr::read_csv("audio_features.csv")
+```
+
+```{r co-genre-data, include = FALSE }
+co_genres <- spotify %>%
+  mutate(
+    spotify_genre = str_replace(spotify_genre, 
+                                "\"children's music\"",
+                                "'childrens music'"),
+    spotify_genre = str_replace(spotify_genre, 
+                                "\"australian children's music\"",
+                                "'australian childrens music'")
+  ) %>%
+  select(song_id, song, performer, spotify_genre) %>%
+  mutate(
+    genre = str_extract_all(spotify_genre, "(?<=')[-a-z0-9 &]+(?=')")
+  ) %>%
+  select(-spotify_genre) %>%
+  unnest(genre)
+```
+
+## Interesting Statistics
+
+### Early Alt Rock
+
+We can now use our co-genre table with the billboard table.
+```{r alt-rock, include = FALSE }
+billboard <- billboard %>%
+  mutate(
+    year = year(mdy(week_id))
+  )
+
+alt_rock_songs <- co_genres %>%
+  filter(genre == "alternative rock")
+
+billboard_alt_rock <- billboard %>% 
+    semi_join(
+      alt_rock_songs, by = c('song_id', 'song', 'performer')
+    )
+```
+
+```{r early-alt-rock, echo = FALSE}
+knitr::kable(
+  billboard_alt_rock %>% 
+    filter(year < 1990) %>%
+    select(year, song, performer) %>%
+    arrange(year) %>%
+    distinct()
+)
+```
+
